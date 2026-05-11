@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/backend","crates/core", "crates/ui-admin", "crates/ui-stream", "crates/ui-stream"]
+
+[workspace.dependencies]
+argh = "0.1.19"
+chrono = { version = "0.4.44", features = ["serde"] }
+radio-core = { path = "crates/core" }
+futures-util = "0.3.32"
+image = "0.25.10"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+symphonia = "0.5.5"
+tokio = { version = "1.52.3", features = ["net", "sync"] }
+uuid = { version = "1.23.1", features = ["serde", "v4", "js"] }

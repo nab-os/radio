@@ -1,0 +1,22 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+argh.workspace = true
+chrono.workspace = true
+radio-core.workspace = true
+cpal = "0.17.3"
+futures-util.workspace = true
+image.workspace = true
+rand = "0.10.1"
+rayon = "1.12.0"
+serde.workspace = true
+serde_json.workspace = true
+symphonia.workspace = true
+tokio = { workspace = true, features = ["full"] }
+tokio-tungstenite = "0.29.0"
+uuid.workspace = true
+walkdir = "2.5.0"
+ctrlc = "3.5.2"
