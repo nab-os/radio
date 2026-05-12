@@ -1,0 +1,17 @@
+[package]
+name = "radio-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono.workspace = true
+dioxus.workspace = true
+futures-channel = "0.3.32"
+futures-util.workspace = true
+radio-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio-tungstenite-wasm.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+wasm-bindgen-futures.workspace = true

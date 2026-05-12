@@ -1,0 +1,14 @@
+.footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  background-color: #00000030;
+  min-height: 50px;
+}
+
+.footer h3 {
+  color: light-grey;  
+  margin: 1rem;
+}

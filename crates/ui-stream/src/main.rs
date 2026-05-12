@@ -1,54 +1,49 @@
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+
+use chrono::Utc;
 use dioxus::prelude::*;
 
-use radio_core::data::track;
+use radio_app::{connect, state::AppState};
 
-const FAVICON: Asset = asset!("/assets/favicon.ico");
-const MAIN_CSS: Asset = asset!("/assets/main.css");
-const HEADER_SVG: Asset = asset!("/assets/header.svg");
+mod components;
 
 fn main() {
     dioxus::launch(App);
 }
 
 #[component]
-fn Track() -> Element {
-    let info = use_context::<track::Info>();
-    rsx! {
-        div {
-            class: "track",
-            img {
-                class: "track__cover",
-                // src: "{info.cover}",
-            }
-            div {
-                class: "track_content",
-                p { "{info.title}" }
-                p { "{info.album}" }
-                p { "{info.artist}" }
-            }
-        }
-    }
-}
-
-#[component]
 fn App() -> Element {
-    rsx! {}
-}
+    let mut state = use_context_provider(AppState::new);
 
-#[component]
-pub fn Hero() -> Element {
+    let background_image = asset!("/assets/background.png");
+
+    use_future(move || async move {
+        loop {
+            sleep(200).await;
+            state.now.set(Utc::now());
+        }
+    });
+
+    use_hook(|| {
+        let running = Arc::new(AtomicBool::new(true));
+        connect(state, "ws://192.168.0.231:8081".to_string(), running);
+    });
+
     rsx! {
-        div {
-            id: "hero",
-            img { src: HEADER_SVG, id: "header" }
-            div { id: "links",
-                a { href: "https://dioxuslabs.com/learn/0.7/", "📚 Learn Dioxus" }
-                a { href: "https://dioxuslabs.com/awesome", "🚀 Awesome Dioxus" }
-                a { href: "https://github.com/dioxus-community/", "📡 Community Libraries" }
-                a { href: "https://github.com/DioxusLabs/sdk", "⚙️ Dioxus Development Kit" }
-                a { href: "https://marketplace.visualstudio.com/items?itemName=DioxusLabs.dioxus", "💫 VSCode Extension" }
-                a { href: "https://discord.gg/XgGxMSkvUM", "👋 Community Discord" }
+        document::Link { rel: "stylesheet", href: asset!("/assets/style.css") }
+        div { class: "app",
+            background_image: "url({background_image})",
+            components::Header {}
+            main {
+                components::NowPlaying {}
+                components::UpNext {}
             }
+            components::Footer {}
         }
     }
+}
+
+async fn sleep(ms: u32) {
+    gloo_timers::future::TimeoutFuture::new(ms).await;
 }

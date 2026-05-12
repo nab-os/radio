@@ -2,6 +2,7 @@ use radio_core::data::track::{self, Track};
 use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::thread::{self, JoinHandle};
+use std::time::Duration;
 
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::{CODEC_TYPE_NULL, DecoderOptions};
@@ -98,7 +99,7 @@ pub fn load_track(path: PathBuf) -> JoinHandle<(Uuid, Track)> {
 
         probed.format = format;
 
-        let duration = total_frames as f64 / sample_rate as f64;
+        let duration = Duration::from_secs_f64(total_frames as f64 / sample_rate as f64);
         let info = load_track_info(path);
         let tech = track::Tech {
             channel_count,

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::collections::VecDeque;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -6,12 +6,12 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct Playlist {
     pub mode: Mode,
-    pub playlist: Vec<Uuid>,
-    pub next_up: Vec<Uuid>,
-    pub suggestions: Vec<(Uuid, u32)>,
+    pub playlist: VecDeque<Uuid>,
+    pub next_up: VecDeque<Uuid>,
+    pub suggestions: VecDeque<(Uuid, u32)>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Mode {
     MANUAL,
     AUTO,
@@ -20,20 +20,20 @@ pub enum Mode {
 impl Playlist {
     pub fn new() -> Self {
         Playlist {
-            playlist: vec![],
-            next_up: vec![],
-            suggestions: vec![],
+            playlist: VecDeque::new(),
+            next_up: VecDeque::new(),
+            suggestions: VecDeque::new(),
             mode: Mode::AUTO,
         }
     }
 
-    pub fn next_track(self: &mut Self) -> Option<Uuid> {
+    pub fn next_track_id(self: &mut Self) -> Option<Uuid> {
         let next_track = match self.mode {
             Mode::MANUAL => {
                 if !self.playlist.is_empty() {
-                    self.playlist.pop()
+                    self.playlist.pop_front()
                 } else {
-                    self.next_up.pop()
+                    self.next_up.pop_front()
                 }
             }
             Mode::AUTO => self

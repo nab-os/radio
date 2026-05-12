@@ -1,3 +1,5 @@
+use std::{collections::VecDeque, time::Duration};
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -12,8 +14,9 @@ pub struct Track {
 
 #[derive(Serialize, Deserialize)]
 pub struct IdPlaylist {
-    pub playlist: Vec<Uuid>,
-    pub next_up: Vec<Uuid>,
+    pub playlist: VecDeque<Uuid>,
+    pub next_up: VecDeque<Uuid>,
+    pub suggestions: VecDeque<(Uuid, u32)>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -30,4 +33,5 @@ pub struct Mode {
 pub struct CurrentTrack {
     pub start_time: DateTime<Utc>,
     pub track_id: Uuid,
+    pub duration: Duration,
 }

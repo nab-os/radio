@@ -4,14 +4,17 @@ version = "0.1.0"
 authors = ["Nabos <nabos@glargh.fr>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-dioxus = { version = "0.7.1", features = [] }
+dioxus.workspace = true
+futures-channel = "0.3.32"
 radio-core.workspace = true
+radio-app.workspace = true
+base64 = "0.22.1"
+chrono.workspace = true
+gloo-timers = { version = "0.4.0", features = ["futures"] }
 
 [features]
-default = ["desktop"]
+default = ["web"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]

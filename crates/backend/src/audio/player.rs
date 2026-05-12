@@ -79,7 +79,8 @@ impl Player {
                     .duration_since(player_start_time)
                     .expect("Error in time");
 
-                let p = (100.0 * time_spent.as_secs_f64() / track.tech.duration).min(100.0) as f32;
+                let p = (100.0 * time_spent.as_secs_f64() / track.tech.duration.as_secs_f64())
+                    .min(100.0) as f32;
                 progress.store(p.to_bits(), Ordering::Relaxed);
 
                 if p >= 100.0 {

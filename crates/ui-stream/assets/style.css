@@ -1,0 +1,38 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    font-size: clamp(0.875rem, 0.75rem + 0.5vw, 1.125rem);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0e0e10;
+    color: #efeff1;
+    min-height: 100vh;
+}
+
+#main {
+    height: 100vh;
+}
+
+.app {
+    margin: 0 auto;
+    background-size: cover;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+main {
+    flex-grow: 1;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    align-items: stretch;
+    min-height: 0;
+}
+

@@ -13,19 +13,21 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use radio_core::{
+    data::track::Track,
     net::{
         dto,
         protocol::{ClientToServer, ServerEvent, ServerToClient},
     },
-    playlist::Playlist,
+    playlist::{Mode, Playlist},
 };
 
-use crate::{audio::player::Player, library::Library, net::Server};
+use crate::{audio::player::Player, library::Library, net::server::Server};
 
 pub struct MiddlewareInner {
     pub music_library: Arc<Library>,
     pub playlist: Playlist,
     pub current_player: Option<Player>,
+    pub current_track: Option<(Uuid, Track, DateTime<Utc>)>,
     pub server: Server,
     running: Arc<AtomicBool>,
     server_handle: Option<JoinHandle<()>>,
@@ -38,52 +40,74 @@ impl MiddlewareInner {
         let missing = 3 - self.playlist.next_up.len();
         for _ in 0..missing {
             self.music_library.pick_random().map(|id| {
-                self.playlist.next_up.push(id);
+                self.playlist.next_up.push_back(id);
             });
         }
         let missing = 3 - self.playlist.suggestions.len();
         for _ in 0..missing {
             self.music_library.pick_random().map(|id| {
-                self.playlist.suggestions.push((id, 0));
+                self.playlist.suggestions.push_back((id, 0));
             });
         }
     }
 
-    pub async fn next_track(self: &mut Self) {
-        self.hydrate();
-        let next_track = self.playlist.next_track();
-        self.hydrate();
+    pub fn next_track(self: &mut Self) {
+        let next_track = {
+            self.hydrate();
+            let next_track_id = self.playlist.next_track_id();
+            if self.playlist.mode == Mode::AUTO {
+                self.playlist.suggestions.clear();
+            }
+            self.hydrate();
 
-        if let Some(next_track) = next_track {
+            let next_track: Option<(Uuid, Track, DateTime<Utc>)> =
+                next_track_id.and_then(|track_id| {
+                    self.music_library
+                        .get_track(track_id)
+                        .map(|track| (track_id, track, Utc::now()))
+                });
+            self.current_track = next_track.clone();
+            next_track
+        };
+
+        if let Some((track_id, next_track, start_time)) = next_track {
+            println!("Playing: {}", track_id);
             self.current_player = self
                 .music_library
-                .get_track(next_track)
+                .get_track(track_id)
                 .map(|track| Player::new(track));
 
             self.server
-                .broadcast(ServerToClient::CurrentTrackUpdate(dto::CurrentTrack {
-                    start_time: Utc::now(),
-                    track_id: next_track,
-                }))
-                .await;
+                .broadcast(ServerToClient::CurrentTrackUpdate(Some(
+                    dto::CurrentTrack {
+                        start_time,
+                        track_id,
+                        duration: next_track.tech.duration,
+                    },
+                )));
+
+            self.server
+                .broadcast(ServerToClient::PlaylistUpdate(dto::IdPlaylist {
+                    playlist: self.playlist.playlist.clone(),
+                    next_up: self.playlist.next_up.clone(),
+                    suggestions: self.playlist.suggestions.clone(),
+                }));
         }
     }
 
-    pub async fn playlist_update(self: &mut Self, playlist_update: dto::IdPlaylist) {
+    pub fn playlist_update(self: &mut Self, playlist_update: dto::IdPlaylist) {
         self.playlist.playlist = playlist_update.playlist.clone();
         self.playlist.next_up = playlist_update.next_up.clone();
         self.server
-            .broadcast(ServerToClient::PlaylistUpdate(playlist_update))
-            .await;
+            .broadcast(ServerToClient::PlaylistUpdate(playlist_update));
     }
 
-    pub async fn mode_update(self: &mut Self, mode_update: dto::Mode) {
+    pub fn mode_update(self: &mut Self, mode_update: dto::Mode) {
         self.server
-            .broadcast(ServerToClient::ModeUpdate(mode_update))
-            .await;
+            .broadcast(ServerToClient::ModeUpdate(mode_update));
     }
 
-    pub async fn on_connection(self: &mut Self, client_id: Uuid) {
+    pub fn on_connection(self: &mut Self, client_id: Uuid) {
         let library_infos = self
             .music_library
             .library
@@ -94,14 +118,29 @@ impl MiddlewareInner {
             })
             .collect();
 
+        self.server.send(
+            client_id,
+            ServerToClient::LibraryUpdate(dto::InfoLibrary {
+                library: library_infos,
+            }),
+        );
+        self.server.send(
+            client_id,
+            ServerToClient::CurrentTrackUpdate(self.current_track.as_ref().map(
+                |(track_id, track, start_time)| dto::CurrentTrack {
+                    start_time: *start_time,
+                    track_id: *track_id,
+                    duration: track.tech.duration,
+                },
+            )),
+        );
+
         self.server
-            .send(
-                client_id,
-                ServerToClient::LibraryUpdate(dto::InfoLibrary {
-                    library: library_infos,
-                }),
-            )
-            .await;
+            .broadcast(ServerToClient::PlaylistUpdate(dto::IdPlaylist {
+                playlist: self.playlist.playlist.clone(),
+                next_up: self.playlist.next_up.clone(),
+                suggestions: self.playlist.suggestions.clone(),
+            }));
     }
 }
 
@@ -121,6 +160,7 @@ impl Middleware {
             music_library,
             playlist,
             current_player,
+            current_track: None,
             server,
             running,
             server_handle: None,
@@ -188,14 +228,14 @@ impl Middleware {
                 while let Some(server_event) = rx.recv().await {
                     let mut inner_guard = inner.lock().unwrap();
                     match server_event {
-                        ServerEvent::ClientConnected(uuid) => inner_guard.on_connection(uuid).await,
+                        ServerEvent::ClientConnected(uuid) => inner_guard.on_connection(uuid),
                         ServerEvent::ClientDisconnected(_) => {}
                         ServerEvent::Message(client_message) => match client_message.payload {
                             ClientToServer::PlaylistUpdate(id_playlist_update) => {
-                                inner_guard.playlist_update(id_playlist_update).await
+                                inner_guard.playlist_update(id_playlist_update)
                             }
                             ClientToServer::ModeUpdate(mode_update) => {
-                                inner_guard.mode_update(mode_update).await
+                                inner_guard.mode_update(mode_update)
                             }
                         },
                     }

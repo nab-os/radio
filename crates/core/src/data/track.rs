@@ -1,8 +1,8 @@
-use std::{collections::VecDeque, path::PathBuf};
+use std::{collections::VecDeque, path::PathBuf, time::Duration};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Info {
     pub path: PathBuf,
     pub title: String,
@@ -15,7 +15,7 @@ pub struct Info {
 pub struct Tech {
     pub channel_count: usize,
     pub sample_rate: u32,
-    pub duration: f64,
+    pub duration: Duration,
 }
 
 #[derive(Clone, Debug)]
