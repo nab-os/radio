@@ -12,6 +12,7 @@ use crate::net::client::Client;
 
 #[derive(Clone, Copy)]
 pub struct AppState {
+    pub server_start_time: Signal<Option<DateTime<Utc>>>,
     pub current_track_id: Signal<Option<Uuid>>,
     pub current_track_start_time: Signal<Option<DateTime<Utc>>>,
     pub current_track_duration: Signal<Option<Duration>>,
@@ -28,6 +29,7 @@ pub struct AppState {
 impl AppState {
     pub fn new() -> Self {
         Self {
+            server_start_time: Signal::new(None),
             current_track_id: Signal::new(None),
             current_track_start_time: Signal::new(None),
             current_track_duration: Signal::new(None),

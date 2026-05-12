@@ -27,7 +27,7 @@ fn App() -> Element {
 
     use_hook(|| {
         let running = Arc::new(AtomicBool::new(true));
-        connect(state, "ws://192.168.0.231:8081".to_string(), running);
+        connect(state, "ws://localhost:8081".to_string(), running);
     });
 
     rsx! {

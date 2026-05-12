@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -17,6 +18,7 @@ pub enum ServerToClient {
     LibraryUpdate(InfoLibrary),
     ModeUpdate(Mode),
     PlaylistUpdate(IdPlaylist),
+    UptimeUpdate(DateTime<Utc>),
 }
 
 pub struct ClientMessage {

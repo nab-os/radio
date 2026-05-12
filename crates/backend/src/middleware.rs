@@ -30,6 +30,7 @@ pub struct MiddlewareInner {
     pub current_track: Option<(Uuid, Track, DateTime<Utc>)>,
     pub server: Server,
     running: Arc<AtomicBool>,
+    start_time: DateTime<Utc>,
     server_handle: Option<JoinHandle<()>>,
     play_handle: Option<JoinHandle<()>>,
     processing_handle: Option<JoinHandle<()>>,
@@ -118,6 +119,9 @@ impl MiddlewareInner {
             })
             .collect();
 
+        self.server
+            .send(client_id, ServerToClient::UptimeUpdate(self.start_time));
+
         self.server.send(
             client_id,
             ServerToClient::LibraryUpdate(dto::InfoLibrary {
@@ -163,6 +167,7 @@ impl Middleware {
             current_track: None,
             server,
             running,
+            start_time: Utc::now(),
             server_handle: None,
             play_handle: None,
             processing_handle: None,

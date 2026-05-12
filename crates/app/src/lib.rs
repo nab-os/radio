@@ -47,6 +47,10 @@ fn apply_event(state: &mut AppState, event: ServerToClient) {
             tracing::info!("Mode update");
             state.mode.set(mode.mode);
         }
+        ServerToClient::UptimeUpdate(start_time) => {
+            tracing::info!("Uptime update");
+            state.server_start_time.set(Some(start_time));
+        }
         ServerToClient::CurrentTrackUpdate(current_track) => {
             tracing::info!("Current track update");
             match current_track {
