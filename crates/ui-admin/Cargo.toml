@@ -1,5 +1,5 @@
 [package]
-name = "ui-admin"
+name = "radio-ui-admin"
 version = "0.1.0"
 authors = ["Nabos <nabos@glargh.fr>"]
 edition = "2021"
